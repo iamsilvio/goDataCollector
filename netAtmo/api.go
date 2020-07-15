@@ -41,25 +41,27 @@ func SetConfig(conf ApiConfig) {
 	}
 }
 
-func GetStationsData() (*Dashboard, error) {
+func GetStationsData() (Dashboard, error) {
 
 	client := oauthConfig.Client(ctx, token)
+
+	var dev ApiResponse
 
 	resp, err := client.Get(apiURL + "getstationsdata")
 	if err != nil {
 		log.Printf("get failed: %s", err)
-		return nil, err
+		return dev.Body.Devices[0].Dashboard, err
 	}
 	defer resp.Body.Close()
 
 	decoder := json.NewDecoder(resp.Body)
 
-	var dev ApiResponse
+	
 
 	err = decoder.Decode(&dev)
 	if err != nil {
 		log.Printf("Response Parsing failed: %s", err)
 	}
 
-	return &dev.Body.Devices[0].Dashboard, nil
+	return dev.Body.Devices[0].Dashboard, nil
 }
