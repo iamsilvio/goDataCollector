@@ -18,7 +18,7 @@ func runNetatmoStuff() {
 	fmt.Printf("%s:/n", time.Now())
 
 	device, err := netAtmo.GetStationsData()
-	if err != nil {
+	if err == nil {
 		d := data.NewDataPoint()
 		d.Title = "HomeClima"
 		d.Date = time.Unix(device.Time, 0)
@@ -82,7 +82,7 @@ func main() {
 		netAtmo.SetConfig(conf.NetAtmo)
 
 		duration = time.Duration(5) * time.Minute
-		runTimer = time.AfterFunc(duration, runNetatmoStuff)
+		runNetatmoStuff()
 
 		for exit != true {
 			time.Sleep(30 * time.Second)
@@ -93,6 +93,7 @@ func main() {
 
 		data.SetConfig(conf.InfluxDb)
 		netAtmo.SetConfig(conf.NetAtmo)
+
 	}
 
 }
