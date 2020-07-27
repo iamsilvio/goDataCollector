@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"crypto/tls"
+	"crypto/x509"
+
 
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 )
@@ -28,15 +31,22 @@ func readConfig(path string) InfluxDbConfig {
 }
 
 var config InfluxDbConfig
+var roots *x509.CertPool
 
 func SetConfig(conf InfluxDbConfig) {
 	config = conf
+
+
+	roots = x509.NewCertPool()
 
 }
 
 func Write(data *DataPoint) {
 
-	client := influxdb2.NewClient(config.ServerURL, config.UserName+":"+config.Password)
+	client := influxdb2.NewClientWithOptions(config.ServerURL, config.UserName+":"+config.Password,
+	influxdb2.DefaultOptions().SetUseGZip(true).SetTlsConfig(&tls.Config{
+					RootCAs: roots}))
+				
 	writeApi := client.WriteApiBlocking("", config.Bucket)
 
 	//	line := fmt.Sprintf("stat,unit=temperature avg=%f,max=%f", 23.5, 45.0)
