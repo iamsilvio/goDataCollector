@@ -10,12 +10,29 @@ import (
 	"path"
 	"time"
 
+	"code.cyb3r.social/skat/goDataCollector/discord"
+
+	"code.cyb3r.social/skat/goDataCollector/pushOver"
+	"code.cyb3r.social/skat/goDataCollector/wellKnownIp"
+
 	"code.cyb3r.social/skat/goDataCollector/data"
 	"code.cyb3r.social/skat/goDataCollector/netAtmo"
 )
 
+func runBackgroundTasks() {
+
+	runNetatmoStuff()
+
+	if ipUpdated() {
+		pushOver.PushIpChange(lastIp)
+		discord.PushIpChange(lastIp)
+		saveIP()
+	}
+
+	runTimer = time.AfterFunc(duration, runBackgroundTasks)
+}
+
 func runNetatmoStuff() {
-	fmt.Printf("%s:/n", time.Now())
 
 	device, err := netAtmo.GetStationsData()
 	if err == nil {
@@ -33,7 +50,44 @@ func runNetatmoStuff() {
 
 		data.Write(d)
 	}
-	runTimer = time.AfterFunc(duration, runNetatmoStuff)
+
+}
+
+var lastIp string
+
+func ipUpdated() bool {
+	ip := wellKnownIp.GetMyPublicIp()
+
+	if lastIp != ip {
+
+		lastIp = ip
+		return true
+	}
+	return false
+}
+
+func saveIP() {
+	file, err := json.MarshalIndent(lastIp, "", " ")
+	if err != nil {
+		log.Printf("Failed to marshal ip: %v\n", err)
+	}
+	err = ioutil.WriteFile("ip.json", file, 0644)
+	if err != nil {
+		log.Printf("Failed to write ip file: %v\n", err)
+	}
+}
+
+func loadIP() {
+
+	file, err := ioutil.ReadFile("ip.json")
+	if err != nil {
+		log.Printf("Failed to read ip file: %v\n", err)
+	}
+
+	err = json.Unmarshal([]byte(file), &lastIp)
+	if err != nil {
+		log.Printf("Failed to unmarshal ip: %v\n", err)
+	}
 }
 
 var runTimer *time.Timer
@@ -41,26 +95,34 @@ var duration time.Duration
 var exit bool
 
 type dataCollectorConfig struct {
-	InfluxDb data.InfluxDbConfig `json:"influxdb"`
-	NetAtmo  netAtmo.ApiConfig   `json:"netatmo"`
+	InfluxDb data.InfluxDbConfig     `json:"influxdb"`
+	NetAtmo  netAtmo.ApiConfig       `json:"netatmo"`
+	Discord  discord.DiscordConfig   `json:"discord"`
+	PushOver pushOver.PushOverConfig `json:"pushOver"`
 }
 
 func readConfig(path string) dataCollectorConfig {
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Printf("Failed to read config file %s", path)
-		log.Fatal(err)
+		log.Printf("Failed to read config file %s:%v\n", path, err)
 	}
 
 	var conf dataCollectorConfig
 
 	err = json.Unmarshal(data, &conf)
 	if err != nil {
-		log.Printf("Failed to parse config file %s", path)
-		log.Fatal(err)
+		log.Printf("Failed to parse config file %s:%v\n", path, err)
 	}
 	return conf
+}
+
+func dev() {
+	if ipUpdated() {
+		pushOver.PushIpChange(lastIp)
+		discord.PushIpChange(lastIp)
+		saveIP()
+	}
 }
 
 func main() {
@@ -74,26 +136,33 @@ func main() {
 	}
 	dir := path.Dir(ex)
 
+	loadIP()
+
 	if *daemonPtr == true {
 
 		conf := readConfig(dir + "/config.json")
 
 		data.SetConfig(conf.InfluxDb)
 		netAtmo.SetConfig(conf.NetAtmo)
+		pushOver.SetConfig(conf.PushOver)
+		discord.SetConfig(conf.Discord)
 
-		duration = time.Duration(5) * time.Minute
-		runNetatmoStuff()
+		duration = time.Duration(20) * time.Second
+		runBackgroundTasks()
 
 		for exit != true {
 			time.Sleep(30 * time.Second)
 		}
 
 	} else {
-		conf := readConfig("config.dev.json")
+		conf := readConfig("config.local.json")
 
 		data.SetConfig(conf.InfluxDb)
 		netAtmo.SetConfig(conf.NetAtmo)
+		pushOver.SetConfig(conf.PushOver)
+		discord.SetConfig(conf.Discord)
+
+		dev()
 
 	}
-
 }
