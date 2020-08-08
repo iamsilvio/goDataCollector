@@ -2,40 +2,17 @@ package data
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"crypto/tls"
 	"crypto/x509"
 
-
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 )
-
-func readConfig(path string) InfluxDbConfig {
-
-	// read file
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	var config InfluxDbConfig
-	// unmarshall it
-	err = json.Unmarshal(data, &config)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-
-	return config
-}
 
 var config InfluxDbConfig
 var roots *x509.CertPool
 
 func SetConfig(conf InfluxDbConfig) {
 	config = conf
-
 
 	roots = x509.NewCertPool()
 
@@ -44,15 +21,12 @@ func SetConfig(conf InfluxDbConfig) {
 func Write(data *DataPoint) {
 
 	client := influxdb2.NewClientWithOptions(config.ServerURL, config.UserName+":"+config.Password,
-	influxdb2.DefaultOptions().SetUseGZip(true).SetTlsConfig(&tls.Config{
-					RootCAs: roots}))
-				
-	writeApi := client.WriteApiBlocking("", config.Bucket)
+		influxdb2.DefaultOptions().SetUseGZip(true).SetTlsConfig(&tls.Config{
+			RootCAs: roots}))
 
-	//	line := fmt.Sprintf("stat,unit=temperature avg=%f,max=%f", 23.5, 45.0)
+	writeApi := client.WriteApiBlocking("", config.Bucket)
 	writeApi.WriteRecord(context.Background(), data.ToLineProtocol())
 
-	fmt.Println(data.ToLineProtocol())
-
 	client.Close()
+
 }

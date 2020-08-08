@@ -36,8 +36,8 @@ func SetConfig(conf ApiConfig) {
 
 	token, err = oauthConfig.PasswordCredentialsToken(ctx, apiConfig.UserName, apiConfig.Password)
 	if err != nil {
-		log.Print("Pwd cred token failed: ")
-		log.Fatal(err)
+		log.Printf("Failed Pwd cred token: %v\n", err)
+
 	}
 }
 
@@ -47,17 +47,16 @@ func GetStationsData() (Dashboard, error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			 result = Dashboard{}
-			 log.Printf("get failed: %s", r)
-	 }
- }()
+			result = Dashboard{}
+		}
+	}()
 
 	client := oauthConfig.Client(ctx, token)
-var dev ApiResponse
+	var dev ApiResponse
 
 	resp, err := client.Get(apiURL + "getstationsdata")
 	if err != nil {
-		log.Printf("get failed: %s", err)
+		log.Printf("Failed to get station data: %v\n", err)
 		return dev.Body.Devices[0].Dashboard, err
 	}
 	defer resp.Body.Close()
@@ -66,7 +65,7 @@ var dev ApiResponse
 
 	err = decoder.Decode(&dev)
 	if err != nil {
-		log.Printf("Response Parsing failed: %s", err)
+		log.Printf("Failed to parse Netatmo Response: %v\n", err)
 	}
 
 	result = dev.Body.Devices[0].Dashboard
