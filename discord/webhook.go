@@ -3,8 +3,6 @@ package discord
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -34,9 +32,9 @@ func PushIpChange(ip string) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	//fmt.Println("response Status:", resp.Status)
+	//fmt.Println("response Headers:", resp.Header)
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println("response Body:", string(body))
 
 }
