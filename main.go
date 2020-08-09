@@ -58,7 +58,7 @@ var lastIp string
 func ipUpdated() bool {
 	ip := wellKnownIp.GetMyPublicIp()
 
-	if lastIp != ip {
+	if len(ip) > 0 && lastIp != ip {
 
 		lastIp = ip
 		return true

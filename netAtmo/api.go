@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-
+	"net/http"
 	"golang.org/x/oauth2"
 )
 
 var token *oauth2.Token
 var apiURL string
 var oauthConfig *oauth2.Config
+var client *http.Client
 
 var ctx = context.Background()
 
@@ -39,6 +40,9 @@ func SetConfig(conf ApiConfig) {
 		log.Printf("Failed Pwd cred token: %v\n", err)
 
 	}
+
+	client = oauthConfig.Client(ctx, token)
+
 }
 
 func GetStationsData() (Dashboard, error) {
@@ -51,7 +55,7 @@ func GetStationsData() (Dashboard, error) {
 		}
 	}()
 
-	client := oauthConfig.Client(ctx, token)
+	
 	var dev ApiResponse
 
 	resp, err := client.Get(apiURL + "getstationsdata")
