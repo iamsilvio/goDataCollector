@@ -10,13 +10,11 @@ import (
 	"path"
 	"time"
 
-	"code.cyb3r.social/skat/goDataCollector/discord"
-
-	"code.cyb3r.social/skat/goDataCollector/pushOver"
-	"code.cyb3r.social/skat/goDataCollector/wellKnownIp"
-
 	"code.cyb3r.social/skat/goDataCollector/data"
-	"code.cyb3r.social/skat/goDataCollector/netAtmo"
+	"code.cyb3r.social/skat/goDataCollector/discord"
+	"code.cyb3r.social/skat/goDataCollector/netatmo"
+	"code.cyb3r.social/skat/goDataCollector/pushover"
+	"code.cyb3r.social/skat/goDataCollector/wellknownip"
 )
 
 func runBackgroundTasks() {
@@ -24,8 +22,8 @@ func runBackgroundTasks() {
 	runNetatmoStuff()
 
 	if ipUpdated() {
-		pushOver.PushIpChange(lastIp)
-		discord.PushIpChange(lastIp)
+		pushover.PushIPChange(lastIP)
+		discord.PushIPChange(lastIP)
 		saveIP()
 	}
 
@@ -34,7 +32,7 @@ func runBackgroundTasks() {
 
 func runNetatmoStuff() {
 
-	device, err := netAtmo.GetStationsData()
+	device, err := netatmo.GetStationsData()
 	if err == nil {
 		d := data.NewDataPoint()
 		d.Title = "HomeClima"
@@ -53,21 +51,21 @@ func runNetatmoStuff() {
 
 }
 
-var lastIp string
+var lastIP string
 
 func ipUpdated() bool {
-	ip := wellKnownIp.GetMyPublicIp()
+	ip := wellknownip.GetMyPublicIP()
 
-	if len(ip) > 0 && lastIp != ip {
+	if len(ip) > 0 && lastIP != ip {
 
-		lastIp = ip
+		lastIP = ip
 		return true
 	}
 	return false
 }
 
 func saveIP() {
-	file, err := json.MarshalIndent(lastIp, "", " ")
+	file, err := json.MarshalIndent(lastIP, "", " ")
 	if err != nil {
 		log.Printf("Failed to marshal ip: %v\n", err)
 	}
@@ -84,7 +82,7 @@ func loadIP() {
 		log.Printf("Failed to read ip file: %v\n", err)
 	}
 
-	err = json.Unmarshal([]byte(file), &lastIp)
+	err = json.Unmarshal([]byte(file), &lastIP)
 	if err != nil {
 		log.Printf("Failed to unmarshal ip: %v\n", err)
 	}
@@ -95,10 +93,10 @@ var duration time.Duration
 var exit bool
 
 type dataCollectorConfig struct {
-	InfluxDb data.InfluxDbConfig     `json:"influxdb"`
-	NetAtmo  netAtmo.ApiConfig       `json:"netatmo"`
-	Discord  discord.DiscordConfig   `json:"discord"`
-	PushOver pushOver.PushOverConfig `json:"pushOver"`
+	InfluxDb data.Config     `json:"influxdb"`
+	NetAtmo  netatmo.Config  `json:"netatmo"`
+	Discord  discord.Config  `json:"discord"`
+	PushOver pushover.Config `json:"pushOver"`
 }
 
 func readConfig(path string) dataCollectorConfig {
@@ -119,8 +117,8 @@ func readConfig(path string) dataCollectorConfig {
 
 func dev() {
 	if ipUpdated() {
-		pushOver.PushIpChange(lastIp)
-		discord.PushIpChange(lastIp)
+		pushover.PushIPChange(lastIP)
+		discord.PushIPChange(lastIP)
 		saveIP()
 	}
 }
@@ -143,8 +141,8 @@ func main() {
 		conf := readConfig(dir + "/config.json")
 
 		data.SetConfig(conf.InfluxDb)
-		netAtmo.SetConfig(conf.NetAtmo)
-		pushOver.SetConfig(conf.PushOver)
+		netatmo.SetConfig(conf.NetAtmo)
+		pushover.SetConfig(conf.PushOver)
 		discord.SetConfig(conf.Discord)
 
 		duration = time.Duration(20) * time.Second
@@ -158,8 +156,8 @@ func main() {
 		conf := readConfig("config.local.json")
 
 		data.SetConfig(conf.InfluxDb)
-		netAtmo.SetConfig(conf.NetAtmo)
-		pushOver.SetConfig(conf.PushOver)
+		netatmo.SetConfig(conf.NetAtmo)
+		pushover.SetConfig(conf.PushOver)
 		discord.SetConfig(conf.Discord)
 
 		dev()

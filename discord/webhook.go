@@ -7,13 +7,15 @@ import (
 	"net/http"
 )
 
-var config DiscordConfig
+var config Config
 
-func SetConfig(conf DiscordConfig) {
+// SetConfig sets the API configuration
+func SetConfig(conf Config) {
 	config = conf
 }
 
-func PushIpChange(ip string) {
+// PushIPChange to discord webhook
+func PushIPChange(ip string) {
 
 	msg := Message{Title: "7Days Server Ip has Changed", Body: "New Ip: " + ip}
 
@@ -22,7 +24,7 @@ func PushIpChange(ip string) {
 	reqBodyBytes := new(bytes.Buffer)
 	json.NewEncoder(reqBodyBytes).Encode(data)
 
-	req, err := http.NewRequest("POST", config.WebHookUrl, reqBodyBytes)
+	req, err := http.NewRequest("POST", config.WebHookURL, reqBodyBytes)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

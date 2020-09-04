@@ -1,10 +1,11 @@
-package netAtmo
+package netatmo
 
 import (
 	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+
 	"golang.org/x/oauth2"
 )
 
@@ -15,7 +16,8 @@ var client *http.Client
 
 var ctx = context.Background()
 
-func SetConfig(conf ApiConfig) {
+// SetConfig sets the API configuration
+func SetConfig(conf Config) {
 
 	apiConfig := conf
 	baseURI := "https://api.netatmo.com/"
@@ -45,6 +47,7 @@ func SetConfig(conf ApiConfig) {
 
 }
 
+// GetStationsData returns the station data from Netatmo API
 func GetStationsData() (Dashboard, error) {
 
 	var result Dashboard
@@ -55,8 +58,7 @@ func GetStationsData() (Dashboard, error) {
 		}
 	}()
 
-	
-	var dev ApiResponse
+	var dev APIResponse
 
 	resp, err := client.Get(apiURL + "getstationsdata")
 	if err != nil {

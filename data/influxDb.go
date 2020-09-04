@@ -1,20 +1,20 @@
 package data
 
 import (
-
-	"log"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"log"
 
- influxdb "github.com/influxdata/influxdb-client-go"
+	influxdb "github.com/influxdata/influxdb-client-go"
 )
 
-var config InfluxDbConfig
+var config Config
 var roots *x509.CertPool
 var client influxdb.Client
 
-func SetConfig(conf InfluxDbConfig) {
+// SetConfig sets the influxDB configuration
+func SetConfig(conf Config) {
 	config = conf
 	roots = x509.NewCertPool()
 
@@ -24,12 +24,13 @@ func SetConfig(conf InfluxDbConfig) {
 			InsecureSkipVerify: true}))
 }
 
-func Write(data *DataPoint) {
+// Write write dataPoint to influx db
+func Write(data *Point) {
 
-	writeApi := client.WriteApiBlocking("", config.Bucket)
-	err := writeApi.WriteRecord(context.Background(), data.ToLineProtocol())
+	writeAPI := client.WriteApiBlocking("", config.Bucket)
+	err := writeAPI.WriteRecord(context.Background(), data.ToLineProtocol())
 	if err != nil {
-			log.Printf("Failed to write to Influxdb : %s\n", err)
+		log.Printf("Failed to write to Influxdb : %s\n", err)
 	}
 
 	client.Close()

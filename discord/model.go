@@ -1,14 +1,17 @@
 package discord
 
-type DiscordConfig struct {
-	WebHookUrl string `json:"webHookUrl"`
+// Config of the Discord API
+type Config struct {
+	WebHookURL string `json:"webHookUrl"`
 }
 
+// Message Discord API Message
 type Message struct {
 	Title string `json:"title"`
 	Body  string `json:"description"`
 }
 
+// MessageContainer Discord API MessageContainer
 type MessageContainer struct {
 	Content string  `json:"content"`
 	Tts     bool    `json:"tts"`

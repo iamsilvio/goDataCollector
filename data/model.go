@@ -6,28 +6,32 @@ import (
 	"time"
 )
 
-type InfluxDbConfig struct {
+// Config of the influxDb connection
+type Config struct {
 	UserName  string `json:"username"`
 	Password  string `json:"password"`
 	ServerURL string `json:"serverurl"`
 	Bucket    string `json:"bucket"`
 }
 
-type DataPoint struct {
+// Point influxDB DataPoint
+type Point struct {
 	Title  string //measurement
 	Tags   map[string]string
 	Fields map[string]string
 	Date   time.Time
 }
 
-func NewDataPoint() *DataPoint {
-	var d DataPoint
+// NewDataPoint init a new DataPoint
+func NewDataPoint() *Point {
+	var d Point
 	d.Tags = make(map[string]string)
 	d.Fields = make(map[string]string)
 	return &d
 }
 
-func (p *DataPoint) ToLineProtocol() string {
+// ToLineProtocol converts a dataPoint to lineProtocol String
+func (p *Point) ToLineProtocol() string {
 
 	result := fmt.Sprintf("%s", p.Title)
 

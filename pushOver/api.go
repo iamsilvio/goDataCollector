@@ -1,4 +1,4 @@
-package pushOver
+package pushover
 
 import (
 	"bytes"
@@ -7,13 +7,21 @@ import (
 	"net/http"
 )
 
-var config PushOverConfig
+var config Config
 
-func SetConfig(conf PushOverConfig) {
+// SetConfig sets the API configuration
+func SetConfig(conf Config) {
 	config = conf
 }
 
-func PushIpChange(ip string) {
+// PushIPChange to pushover api
+func PushIPChange(ip string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Failed to Post new Ip: %v\n", r)
+		}
+	}()
 
 	url := "https://api.pushover.net/1/messages.json"
 
