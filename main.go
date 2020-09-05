@@ -49,6 +49,9 @@ func runNetatmoStuff() {
 		data.Write(d)
 	}
 
+	if device.Co2 > 750 {
+		pushover.PushNotification(device.Co2)
+	}
 }
 
 var lastIP string
