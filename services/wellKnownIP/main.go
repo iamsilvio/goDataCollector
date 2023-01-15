@@ -2,13 +2,19 @@ package wellKnownIP
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
+
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 )
 
 var lastIP = ""
+var dataPath = ""
+
+func SetConfig(path string) {
+	dataPath = path
+}
 
 // GetMyPublicIP returns the string of the Public ip
 func GetMyPublicIP() (ip string, hasChanged bool) {
@@ -60,7 +66,8 @@ func SaveIP() {
 		log.WithError(err).Error("Failed to marshal ip\n")
 		return
 	}
-	err = ioutil.WriteFile("./appData/ip.json", file, 0644)
+
+	err = os.WriteFile(dataPath+"ip.json", file, 0644)
 	if err != nil {
 		log.WithError(err).Error("Failed to write ip file\n")
 	}
@@ -69,7 +76,7 @@ func SaveIP() {
 func LoadIP() {
 	log.Trace("Load IP \n")
 
-	file, err := ioutil.ReadFile("./appData/ip.json")
+	file, err := os.ReadFile(dataPath + "ip.json")
 	if err != nil {
 		log.WithError(err).Error("Failed to read ip file\n")
 		lastIP = ""

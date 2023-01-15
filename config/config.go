@@ -2,14 +2,14 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func ReadConfig(path string) DataCollectorConfig {
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.WithError(err).Error("Failed to read config file\n")
 	}
