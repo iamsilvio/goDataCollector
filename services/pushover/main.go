@@ -3,9 +3,11 @@ package pushover
 import (
 	"bytes"
 	"encoding/json"
-	"log"
+
 	"net/http"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var config Config
@@ -20,7 +22,7 @@ func PushIPChange(ip string) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Failed to Post new Ip: %v\n", r)
+			log.Errorf("Failed to Post new Ip: %v\n", r)
 		}
 	}()
 
@@ -32,19 +34,18 @@ func PushIPChange(ip string) {
 	json.NewEncoder(reqBodyBytes).Encode(data)
 
 	req, err := http.NewRequest("POST", url, reqBodyBytes)
+	if err != nil {
+		log.WithError(err).Errorf("Could not create POST request\n")
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Failed to Post new Ip to Pushover: %v\n", err)
+		log.WithError(err).Error("Failed to Post new IP to Pushover\n")
 	}
 	defer resp.Body.Close()
-
-	//	fmt.Println("response Status:", resp.Status)
-	//	fmt.Println("response Headers:", resp.Header)
-	//	body, _ := ioutil.ReadAll(resp.Body)
-	//	fmt.Println("response Body:", string(body))
 
 }
 
@@ -53,7 +54,7 @@ func PushNotification(co2 int) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Failed to Post co2 value: %v\n", r)
+			log.Errorf("Failed to Post co2 value: %v\n", r)
 		}
 	}()
 
@@ -65,12 +66,15 @@ func PushNotification(co2 int) {
 	json.NewEncoder(reqBodyBytes).Encode(data)
 
 	req, err := http.NewRequest("POST", url, reqBodyBytes)
+	if err != nil {
+		log.WithError(err).Errorf("Could not create POST request\n")
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Failed to Post Co2 Warning to Pushover: %v\n", err)
+		log.WithError(err).Error("Failed to Post Co2 Warning to Pushover\n")
 	}
 	defer resp.Body.Close()
 

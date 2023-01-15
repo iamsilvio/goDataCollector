@@ -1,10 +1,5 @@
 package discord
 
-// Config of the Discord API
-type Config struct {
-	WebHookURL string `json:"webHookUrl"`
-}
-
 // Message Discord API Message
 type Message struct {
 	Title string `json:"title"`

@@ -1,8 +1,11 @@
 # WiP
 
-## ToDos
+## Dev env
 
-## references
+- start the influxDB 2 container `docker compose -f docker-compose.dev.yml up`
+- make shure you have a config file `./appData/config.json`
+- run the app with `go run . -d`
+- look at `main.go` for additional options or `go run . -h`
 
 ## Netatmo api ref
 
@@ -56,25 +59,3 @@ https://api.netatmo.com/api/getmeasure?device_id=70%3Aee%3A50%3A2c%3A8f%3Abc&sca
 - date_begin
 - date_end
 - limit
-
-## commands
-
-to register a sub Package run `go install` inside the subpackage folder
-
-- Set the date format on influx db `influx -precision rfc3339` or on a existing cli session `precision rfc3339`
-
-## InfluxDB
-
-[Create User in Influx db](https://docs.influxdata.com/influxdb/v1.8/administration/authentication_and_authorization/#authorization)
-
-### Dev Env config
-
-```sql
-CREATE USER Dev WITH PASSWORD 'SecurePassword' WITH ALL PRIVILEGES
-CREATE DATABASE dataCollect
-
-```
-
-### MacOs
-
-`influxd -config /usr/local/etc/influxdb.conf` to start a local instance

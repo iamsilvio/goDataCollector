@@ -1,0 +1,16 @@
+version: '3'
+services:
+  influxdb:
+    image: influxdb:2.4-alpine
+    container_name: dev-influx
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup 
+      DOCKER_INFLUXDB_INIT_USERNAME: dataCollectDev
+      DOCKER_INFLUXDB_INIT_PASSWORD: ThisIsSecureForSure
+      DOCKER_INFLUXDB_INIT_ORG: deleteonerror
+      DOCKER_INFLUXDB_INIT_BUCKET: dataCollectDev 
+    ports:
+      - "127.0.0.1:8086:8086"
+    volumes:
+      - $PWD/.local/db_data:/var/lib/influxdb2
+      - $PWD/.local/db_config:/etc/influxdb2

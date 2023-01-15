@@ -1,0 +1,21 @@
+{
+    "influxdb": {
+        "organisation": "",
+        "token": "",
+        "serverurl": "",
+        "bucket": ""
+    },
+    "netatmo": {
+        "accessToken": "",
+        "refreshToken": "",
+        "clientid": "",
+        "clientsecret": ""
+    },
+    "discord": {
+        "webHookUrl": ""
+    },
+    "pushOver": {
+        "userKey": "",
+        "appKey": ""
+    }
+}

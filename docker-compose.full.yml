@@ -1,0 +1,33 @@
+version: '3'
+services:
+  influxdb:
+    image: influxdb:2.4-alpine
+    container_name: collect_influx
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup 
+      DOCKER_INFLUXDB_INIT_USERNAME: dataCollectDev
+      DOCKER_INFLUXDB_INIT_PASSWORD: ThisIsSecureForSure
+      DOCKER_INFLUXDB_INIT_ORG: deleteonerror
+      DOCKER_INFLUXDB_INIT_BUCKET: dataCollectDev 
+    ports:
+      - "8086:8086"
+    volumes:
+      - $PWD/.local/db_data:/var/lib/influxdb2
+      - $PWD/.local/db_config:/etc/influxdb2
+    healthcheck:
+          test: influx ping
+          start_period: 5s
+          interval: 10s
+          timeout: 10s
+          retries: 3
+  goDataCollect:
+    image: godatacollect:latest
+    container_name: goDataCollect
+    volumes:
+      - $PWD/.local/app_data:/var/lib/goDataCollector
+      - $PWD/.local/app_config/config.json:/etc/goDataCollector/config.json
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    links: 
+        - influxdb

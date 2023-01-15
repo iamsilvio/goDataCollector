@@ -1,13 +1,5 @@
 package netatmo
 
-// Config Netatwo API configuration
-type Config struct {
-	UserName     string `json:"username"`
-	Password     string `json:"password"`
-	ClientID     string `json:"clientid"`
-	ClientSecret string `json:"clientsecret"`
-}
-
 // Place Netatmo API Place
 type Place struct {
 	Altitude int       `json:"altitude"`
@@ -84,18 +76,4 @@ type AdminSetting struct {
 type User struct {
 	Mail           string       `json:"mail"`
 	Administrative AdminSetting `json:"administrative"`
-}
-
-// APIResponseBody Netatmo API ResponseBody
-type APIResponseBody struct {
-	Devices []Device `json:"devices"`
-	User    User     `json:"user"`
-}
-
-// APIResponse Netatmo API Response
-type APIResponse struct {
-	Body       APIResponseBody `json:"body"`
-	Status     string          `json:"status"`
-	TimeExec   float64         `json:"time_exec"`
-	TimeServer int64           `json:"time_server"`
 }

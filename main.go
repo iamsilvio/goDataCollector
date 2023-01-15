@@ -1,169 +1,91 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
 	"os"
-	"path"
-	"time"
+	"strings"
 
-	"code.cyb3r.social/skat/goDataCollector/data"
-	"code.cyb3r.social/skat/goDataCollector/discord"
-	"code.cyb3r.social/skat/goDataCollector/netatmo"
-	"code.cyb3r.social/skat/goDataCollector/pushover"
-	"code.cyb3r.social/skat/goDataCollector/wellknownip"
+	"code.cyb3r.social/skat/goDataCollector/app"
+	log "github.com/sirupsen/logrus"
 )
 
-func runBackgroundTasks() {
+func setupLog(logFilePath string) {
 
-	runNetatmoStuff()
+	logFile, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 
-	if ipUpdated() {
-		pushover.PushIPChange(lastIP)
-		discord.PushIPChange(lastIP)
-		saveIP()
-	}
-
-	runTimer = time.AfterFunc(duration, runBackgroundTasks)
-}
-
-func runNetatmoStuff() {
-
-	device, err := netatmo.GetStationsData()
-	if err == nil {
-		d := data.NewDataPoint()
-		d.Title = "HomeClima"
-		d.Date = time.Unix(device.Time, 0)
-		d.Tags["Room"] = "rabbitWarren"
-		d.Tags["Service"] = "NetAtmoAPI"
-		d.Fields["Temperature"] = fmt.Sprintf("%f", device.Temperature)
-		d.Fields["Co2"] = fmt.Sprintf("%d", device.Co2)
-		d.Fields["Humidity"] = fmt.Sprintf("%d", device.Humidity)
-		d.Fields["Noise"] = fmt.Sprintf("%d", device.Noise)
-		d.Fields["Pressure"] = fmt.Sprintf("%f", device.Pressure)
-		d.Fields["AbsolutePressure"] = fmt.Sprintf("%f", device.AbsolutePressure)
-
-		data.Write(d)
-	}
-
-	if device.Co2 > 750 {
-		pushover.PushNotification(device.Co2)
-	}
-}
-
-var lastIP string
-
-func ipUpdated() bool {
-	ip := wellknownip.GetMyPublicIP()
-
-	if len(ip) > 0 && lastIP != ip {
-
-		lastIP = ip
-		return true
-	}
-	return false
-}
-
-func saveIP() {
-	file, err := json.MarshalIndent(lastIP, "", " ")
 	if err != nil {
-		log.Printf("Failed to marshal ip: %v\n", err)
+		log.WithError(err).Errorf("Failed to create logfile %s\n", logFilePath)
+	} else {
+		multi := io.MultiWriter(logFile, os.Stdout)
+		log.SetOutput(multi)
 	}
-	err = ioutil.WriteFile("ip.json", file, 0644)
-	if err != nil {
-		log.Printf("Failed to write ip file: %v\n", err)
-	}
+
+	log.SetFormatter(&log.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+		PadLevelText:    true,
+	})
+
 }
 
-func loadIP() {
-
-	file, err := ioutil.ReadFile("ip.json")
-	if err != nil {
-		log.Printf("Failed to read ip file: %v\n", err)
-	}
-
-	err = json.Unmarshal([]byte(file), &lastIP)
-	if err != nil {
-		log.Printf("Failed to unmarshal ip: %v\n", err)
-	}
-}
-
-var runTimer *time.Timer
-var duration time.Duration
-var exit bool
-
-type dataCollectorConfig struct {
-	InfluxDb data.Config     `json:"influxdb"`
-	NetAtmo  netatmo.Config  `json:"netatmo"`
-	Discord  discord.Config  `json:"discord"`
-	PushOver pushover.Config `json:"pushOver"`
-}
-
-func readConfig(path string) dataCollectorConfig {
-
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Printf("Failed to read config file %s:%v\n", path, err)
-	}
-
-	var conf dataCollectorConfig
-
-	err = json.Unmarshal(data, &conf)
-	if err != nil {
-		log.Printf("Failed to parse config file %s:%v\n", path, err)
-	}
-	return conf
-}
-
-func dev() {
-	if ipUpdated() {
-		pushover.PushIPChange(lastIP)
-		discord.PushIPChange(lastIP)
-		saveIP()
-	}
+func exit() {
+	log.Infof("exit\n")
 }
 
 func main() {
+	defer exit()
+	var lLevel string
+	var daemon bool
+	var help bool
+	var logToFile bool
+	var devLocal bool
 
-	daemonPtr := flag.Bool("daemon", false, "run the modules as Daemon")
+	flag.StringVar(&lLevel, "l", "Info", "default (Info) possibel values are Info, Debug, Trace")
+	flag.BoolVar(&daemon, "d", false, "run as daemon")
+	flag.BoolVar(&help, "h", false, "print help")
+	flag.BoolVar(&logToFile, "f", false, "log to file")
+	flag.BoolVar(&devLocal, "dl", false, "load local.config.json")
+
 	flag.Parse()
 
-	ex, err := os.Executable()
-	if err != nil {
-		log.Fatal(err)
+	if help {
+		flag.PrintDefaults()
+		os.Exit(0)
 	}
-	dir := path.Dir(ex)
 
-	loadIP()
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors:     true,
+		DisableColors:   false,
+		TimestampFormat: "2006-01-02 15:04:05",
+		PadLevelText:    true,
+	})
 
-	if *daemonPtr == true {
+	switch strings.ToLower(lLevel) {
+	case "info":
+		log.SetLevel(log.InfoLevel)
+		log.Infof("Loglevel set to Info.")
+	case "trace":
+		log.SetLevel(log.TraceLevel)
+		log.SetReportCaller(true)
+		log.Infof("Loglevel set to Trace.")
+	case "debug":
+		log.SetLevel(log.DebugLevel)
+		log.SetReportCaller(true)
+		log.Infof("Loglevel set to Debug.")
+	default:
+		log.SetLevel(log.InfoLevel)
+		log.Warningf("Provided loglevel %s not valid using Info.\n", lLevel)
+	}
 
-		conf := readConfig(dir + "/config.json")
+	if logToFile {
+		setupLog("./appData/Logs/today.log")
+	}
 
-		data.SetConfig(conf.InfluxDb)
-		netatmo.SetConfig(conf.NetAtmo)
-		pushover.SetConfig(conf.PushOver)
-		discord.SetConfig(conf.Discord)
-
-		duration = time.Duration(20) * time.Second
-		runBackgroundTasks()
-
-		for exit != true {
-			time.Sleep(30 * time.Second)
-		}
-
+	if daemon {
+		app.Daemonize(devLocal)
 	} else {
-		conf := readConfig("config.local.json")
-
-		data.SetConfig(conf.InfluxDb)
-		netatmo.SetConfig(conf.NetAtmo)
-		pushover.SetConfig(conf.PushOver)
-		discord.SetConfig(conf.Discord)
-
-		dev()
-
+		app.Run(devLocal)
 	}
+
 }

@@ -1,11 +1,5 @@
 package pushover
 
-// Config API access config
-type Config struct {
-	UserKey        string `json:"userKey"`
-	ApplicationKey string `json:"appKey"`
-}
-
 // Message object of Pushover API
 type Message struct {
 	Token   string `json:"token"` // your application's API token
