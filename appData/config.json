@@ -1,7 +1,7 @@
 {
     "influxdb": {
-        "username": "",
-        "password": "",
+        "organisation": "",
+        "token": "",
         "serverurl": "",
         "bucket": ""
     },
