@@ -12,5 +12,5 @@ services:
     ports:
       - "127.0.0.1:8086:8086"
     volumes:
-      - $PWD/.local/data:/var/lib/influxdb2
-      - $PWD/.local/config:/etc/influxdb2
+      - $PWD/.local/db_data:/var/lib/influxdb2
+      - $PWD/.local/db_config:/etc/influxdb2
