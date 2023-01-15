@@ -14,7 +14,7 @@ import (
 )
 
 var runTimer *time.Timer
-var duration time.Duration
+var interval time.Duration
 var exit bool
 var conf config.DataCollectorConfig
 var co2Notified bool
@@ -24,8 +24,10 @@ func configure(local bool) {
 
 	if local {
 		conf = config.ReadConfig("./appData/local.config.json")
+		wellKnownIP.SetConfig("./appData/")
 	} else {
-		conf = config.ReadConfig("./appData/config.json")
+		conf = config.ReadConfig("/etc/goDataCollector/config.json")
+		wellKnownIP.SetConfig("/var/lib/goDataCollector/")
 	}
 
 	discord.SetConfig(conf.Discord)
@@ -65,7 +67,7 @@ func runBackgroundTasks(daemon bool, devLocal bool) {
 	influxdb.Write(stationData.ToPoint())
 
 	if daemon {
-		runTimer = time.AfterFunc(duration, func() {
+		runTimer = time.AfterFunc(interval, func() {
 			runBackgroundTasks(true, devLocal)
 		})
 
@@ -77,7 +79,7 @@ func Daemonize(devLocal bool) {
 	log.Trace("Run on Daemon Mode\n")
 	configure(devLocal)
 
-	duration = time.Duration(20) * time.Second
+	interval = time.Duration(150) * time.Second
 	runBackgroundTasks(true, devLocal)
 
 	for !exit {
